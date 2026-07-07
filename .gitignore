@@ -1,0 +1,7 @@
+node_modules/
+.env
+
+jsconfig.json
+*.drawio
+*.drawio.bkp
+test-config.js

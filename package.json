@@ -1,0 +1,16 @@
+{
+	"dependencies": {
+		"deepmerge": "^4.3.1",
+		"discord.js": "^14.26.4",
+		"dotenv": "^17.4.2",
+		"mysql2": "^3.22.5"
+	},
+	"engines": {
+		"node": ">=26.4.0"
+	},
+	"type": "module",
+	"main": "src/index.js",
+	"imports": {
+		"#src/*": "./src/*.js"
+	}
+}
