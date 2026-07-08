@@ -28,6 +28,16 @@ global.projConf = {
 		},
 	},
 
+	textColours: {
+		reset: "\x1b[0m",
+		red: "\x1b[38;2;210;080;080m",
+		green: "\x1b[38;2;050;180;050m",
+		yellow: "\x1b[38;2;210;210;000m",
+		blue: "\x1b[38;2;000;000;210m",
+		magenta: "\x1b[38;2;220;060;180m",
+		cyan: "\x1b[38;2;000;190;190m",
+	},
+
 	path: {
 		root: rootDir,
 		commands: path.join(rootDir, "src/commands"),

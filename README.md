@@ -14,9 +14,11 @@ To count the word no and associate it with points as well as having some moderat
 
 ## Plans
 * To have the score reduced when someone says a synonym to yes. It needs a good formula so it doesn't take away too many or too few points
+* If someone's first word is a synonym to yes, they will be silenced until reviewed by a admin.
 * Have synonyms to no such as nah
 * Allow the classic Australian "yeah, nah"
 * Have a text based RPG where you can earn points and multipliers as well as maybe adding some roles and other aesthetics
+* Combos, when someone responds with a normal sentence that makes sense with context (decided by an LLM) the no count will be boosted. Each no will multiply so 7 nos in one sentence could be worth 1200 points.
 
 # Project Documentation
 * Note: keep commits readable, if I can't understand your code easily enough then I'm just going to ignore it. And I'm telling you now, if you're just going to get an LLM to do everything for you then you can piss off now.

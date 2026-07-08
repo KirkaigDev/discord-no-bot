@@ -16,6 +16,15 @@ interface ProjectConfig {
 			firstWarning: string;
 		};
 	};
+	textColours: {
+		reset: string;
+		red: string;
+		green: string;
+		yellow: string;
+		blue: string;
+		magenta: string;
+		cyan: string;
+	};
 	path: {
 		root: string;
 		commands: string;
