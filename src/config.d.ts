@@ -42,6 +42,11 @@ interface ProjectConfig {
 }
 
 declare global {
+	interface Math {
+		bankersRounding(num: number, decimalPlaces: number): number;
+		percentRounding(num: number): number;
+	}
+
 	var projConf: ProjectConfig;
 }
 
