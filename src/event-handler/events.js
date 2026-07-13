@@ -8,7 +8,7 @@ async function attachEventFile(client, filePath, eventName) {
 		const execute = module.default;
 		if (typeof execute !== "function") { throw new Error("does not have an exported default of type function."); }
 
-		client.on(eventName, (...args) => execute(client, ...args));
+		client.on(eventName, async (...args) => await execute(client, ...args));
 	} catch (err) {
 		console.error(`Failed to attach event file, ${filePath}: ${err}`)
 	}
