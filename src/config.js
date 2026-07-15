@@ -14,7 +14,7 @@ global.projConf = {
 		devs: ["726293202642010144"],
 		spamChannelId: "1200739710490923079",
 		roleIds: {
-			negator: "1409818858096689192",
+			negator: "1409638286233960600",
 
 			leaderboardFirst: "1409843374806138930",
 			leaderboardSecond: "1409843542657990707",
