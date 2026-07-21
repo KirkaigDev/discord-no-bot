@@ -1,3 +1,5 @@
+import type { PointsTable, TableHandler } from "#src/db-schema.d";
+import type { CommandInterface } from "#src/event-handler/types.d";
 import { updateLeaderboardRoles } from "#src/events/messageCreate/no-counter";
 import { SlashCommandBuilder } from "discord.js"
 
@@ -7,21 +9,24 @@ export default {
 		.setRequired(true)
 	),
 
-	exec: async ({ client, interaction }) => {
+	exec: async ({ client, interaction }: CommandInterface) => {
 		try {
 			await interaction.deferReply();
 
 			const guildId = interaction.guildId;
-			const userId = interaction.options.getUser("user").id;
+			const user = interaction.options.getUser("user");
+			if (!user) throw new Error("couldn't get user");
 
-			const [results] = await client.db.query(
+			const [[results]] = await client.db.query<TableHandler<PointsTable, "points">>(
 				`SELECT points
 				FROM user_points
 				WHERE guild_id = ? AND user_id = ?`,
-				[guildId, userId]
+				[guildId, user.id]
 			);
-			const points = results[0]?.points ?? 0;
-			await interaction.editReply(`${targetUser.username} has ${String(points)} points!`);
+			const points = results?.points ?? 0;
+			await interaction.editReply(`${user.username} has ${String(points)} points!`);
+
+			if (!interaction.guild) throw new Error("interaction.guild is null");
 			updateLeaderboardRoles({guild: interaction.guild, pool: client.db});
 		} catch (err) {
 			console.error(String(err));

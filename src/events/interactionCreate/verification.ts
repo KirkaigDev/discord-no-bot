@@ -1,12 +1,19 @@
+import type { EventHandler } from "#src/event-handler/types.d";
 import { MessageFlags } from "discord.js";
 
-export default async (_, interaction) => {
+export default (async (_, interaction) => {
 	if (!interaction.isButton()) return;
 	if (interaction.message.content !== `Click "No" to agree with the rules and accept the word no into your heart.`) return;
 
-	const role = interaction.guild.roles.cache.get(projConf.discord.roleIds.negator);
+	const guild = interaction.guild;
+	if (!guild) throw new Error("interaction.guild is null");
+	let role = guild.roles.cache.get(projConf.discord.roleIds.negator) ?? await guild.roles.fetch(projConf.discord.roleIds.negator);
 
-	const hasRole = interaction.member.roles.cache.has(role.id);
+	if (!role) throw new Error("role is null");
+
+	const member = await guild.members.fetch(interaction.user.id);
+
+	const hasRole = member.roles.cache.has(role.id);
 	const lesserRoles = [projConf.discord.roleIds.firstWarning];
 
 	await interaction.deferReply({
@@ -14,7 +21,7 @@ export default async (_, interaction) => {
 	});
 
 	const hasLesserRole = lesserRoles.some((roleId) =>
-		interaction.member.roles.cache.has(roleId)
+		member.roles.cache.has(roleId)
 	);
 
 	if (!role) {
@@ -31,6 +38,6 @@ export default async (_, interaction) => {
 		return;
 	}
 
-	await interaction.member.roles.add(role);
+	await member.roles.add(role);
 	interaction.editReply("You now have access to the server.");
-}
+}) as EventHandler<"interactionCreate">;

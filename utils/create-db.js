@@ -1,4 +1,4 @@
-import { pool } from "./db.js";
+import { pool } from "#src/db";
 
 const dbName = pool.pool.config.connectionConfig.database;
 if (dbName === undefined) throw new Error("database is undefined");
@@ -16,3 +16,5 @@ await pool.query(
 	points bigint(20) UNSIGNED NOT NULL DEFAULT 0
 	) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;`
 )
+await pool.end();
+console.log(`Created ${dbName} database successfully`);

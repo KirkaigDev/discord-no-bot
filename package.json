@@ -3,14 +3,24 @@
 		"deepmerge": "^4.3.1",
 		"discord.js": "^14.26.4",
 		"dotenv": "^17.4.2",
-		"mysql2": "^3.22.5"
+		"mysql2": "^3.22.5",
+		"typescript": "^7.0.2"
 	},
 	"engines": {
 		"node": ">=26.4.0"
 	},
 	"type": "module",
-	"main": "src/index.js",
+	"main": "build/index.js",
+	"scripts": {
+		"build": "rm -r ./build/ && tsc",
+		"start": "node ./build/index.js",
+		"create-db": "node ./utils/create-db.js",
+		"create-db-schema": "node ./utils/create-db-schema.js"
+	},
 	"imports": {
-		"#src/*": "./src/*.js"
+		"#src/*": {
+			"typescript": "./src/*.ts",
+			"default": "./build/*.js"
+		}
 	}
 }

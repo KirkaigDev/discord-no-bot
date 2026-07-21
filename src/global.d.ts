@@ -38,14 +38,25 @@ interface ProjectConfig {
 		enable: boolean;
 		host: string;
 		port: string;
-	}
+	};
 }
 
 declare global {
+	namespace NodeJS {
+		interface ProcessEnv {
+			TOKEN: string;
+
+			DB_HOST: string;
+			DB_USER: string;
+			DB_PASS: string;
+			DB_NAME: string;
+		};
+	};
+
 	interface Math {
 		bankersRounding(num: number, decimalPlaces: number): number;
 		percentRounding(num: number): number;
-	}
+	};
 
 	var projConf: ProjectConfig;
 }

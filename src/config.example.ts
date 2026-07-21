@@ -40,8 +40,8 @@ global.projConf = {
 
 	path: {
 		root: rootDir,
-		commands: path.join(rootDir, "src/commands"),
-		events: path.join(rootDir, "src/events"),
+		commands: path.join(rootDir, "build/commands"),
+		events: path.join(rootDir, "build/events"),
 	},
 
 	eventManager: {

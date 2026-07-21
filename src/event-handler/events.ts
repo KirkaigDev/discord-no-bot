@@ -1,12 +1,14 @@
 import fs from "fs";
 import path from "path";
 
-async function attachEventFile(client, filePath, eventName) {
+import { CustomClient } from "#src/index";
+
+async function attachEventFile(client: CustomClient, filePath: string, eventName: string) {
 	try {
-		const module = await import(`file://${filePath}`);
+		const module = await import("file://" + filePath);
 
 		const execute = module.default;
-		if (typeof execute !== "function") { throw new Error("does not have an exported default of type function."); }
+		if (typeof execute !== "function") throw new Error("does not have an exported default of type function.");
 
 		client.on(eventName, async (...args) => await execute(client, ...args));
 	} catch (err) {
@@ -14,12 +16,12 @@ async function attachEventFile(client, filePath, eventName) {
 	}
 }
 
-export async function setEvents(client) {
+export async function setEvents(client: CustomClient) {
 	const eventsDirPath = projConf.path.events;
 
 	const events = fs.readdirSync(eventsDirPath, { withFileTypes: true })
-		.filter(entry => entry.isDirectory())
-		.map(dir => dir.name);
+	.filter(entry => entry.isDirectory())
+	.map(dir => dir.name);
 
 	for (const eventName of events) {
 		const eventFilePaths = fs.readdirSync(path.join(eventsDirPath, eventName), { withFileTypes: true })

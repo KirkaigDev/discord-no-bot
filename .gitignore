@@ -1,7 +1,9 @@
 node_modules/
 .env
+/build/
 
-jsconfig.json
+# diagram files
 *.drawio
 *.drawio.bkp
-test-config.js
+
+/src/config.ts
