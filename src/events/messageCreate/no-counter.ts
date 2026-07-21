@@ -167,6 +167,7 @@ export async function scorePoints({ word="no", text, user, pool, translationStat
 
 export default (async(client, msg) => {
 	if (msg.author.bot) return;
+	if (msg.channelId === client.recountingChannelId) return;
 
 	const word = "no";
 

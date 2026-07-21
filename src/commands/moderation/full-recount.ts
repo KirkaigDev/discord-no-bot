@@ -1,4 +1,4 @@
-import { DiscordAPIError, FetchMessagesOptions, GuildMember, RateLimitError, SlashCommandBuilder, TextChannel } from "discord.js"
+import { DiscordAPIError, FetchMessagesOptions, RateLimitError, SlashCommandBuilder, TextChannel } from "discord.js"
 import { scorePoints, updateLeaderboardRoles } from "#src/events/messageCreate/no-counter";
 import type { CommandInteractionFix, CommandInterface } from "#src/event-handler/types.d";
 import type { CustomClient } from "#src/index";
@@ -69,8 +69,8 @@ async function fetchChannelMessages(
 			};
 
 			if (
-				(fetchOptions.limit) &&
-				(channelMessages.size < fetchOptions.limit)
+				((fetchOptions.limit) && (channelMessages.size < fetchOptions.limit)) ||
+				(channelMessages.size === 0)
 			) return { occuredErrors: occuredErrors, hitErrorLimit: false };
 
 			continuousErrorCount = 0;
@@ -135,14 +135,18 @@ export default {
 
 				if (!channel) continue;
 
-				const scanMsgPromise = interactionChannel.send(`Scanning #${channel.name}...`);
+				client.recountingChannelId = channel.id;
+
+				const scanMsgsPromise = interactionChannel.send(`Scanning #${channel.name}...`);
 				const fetchMessagesPromise = fetchChannelMessages(channel, interaction, client);
 
-				await scanMsgPromise;
+				await scanMsgsPromise;
 				try {
 					if ((await fetchMessagesPromise).occuredErrors) fetchSuccess = false;
+					client.recountingChannelId = "";
 					await interactionChannel.send(`Fetched all messages from ${channel.name}!`);
 				} catch(e) {
+					client.recountingChannelId = "";
 					await interactionChannel.send(`Failed to fetch messages of #${channel.name}, error: ${e}`)
 				};
 			};
