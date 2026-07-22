@@ -54,5 +54,7 @@ global.projConf = {
 		enable: false,
 		host: process.env.DB_HOST,
 		port: "5000",
+		// the maximum cache size in MiB
+		cache: 25,
 	},
 }

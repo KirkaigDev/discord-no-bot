@@ -89,7 +89,7 @@ const client = new Client({
 client.db = pool;
 client.recountingIsOn = false;
 client.recountedChannelIds = [];
-client.translationCache = new TranslationCache(10);
+client.translationCache = new TranslationCache(projConf.translator.cache);
 
 import { setEvents } from "#src/event-handler/events";
 await setEvents(client);

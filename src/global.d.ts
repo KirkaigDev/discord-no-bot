@@ -38,6 +38,7 @@ interface ProjectConfig {
 		enable: boolean;
 		host: string;
 		port: string;
+		cache: number;
 	};
 }
 
