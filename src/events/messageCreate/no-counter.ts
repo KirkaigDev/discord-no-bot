@@ -94,7 +94,7 @@ async function translate(text: string) {
 	}
 }
 
-function countWord(word: string, text: string) {
+async function countWord(word: string, text: string) {
 	let count = 0;
 	let pos = 0;
 	const moddedText = text.toLowerCase();
@@ -119,8 +119,7 @@ interface ScorePointsReturn {
 };
 
 export async function scorePoints({ word="no", text, user, pool, translationStatus=null}: ScorePoints): Promise<ScorePointsReturn> {
-	if ((typeof text !== "string") || (text === "")) return { count: 0, score: 0 };
-	let count: number = countWord(word, text);
+	let count: number = await countWord(word, text);
 
 	let enableTranslator = translationStatus;
 	if (translationStatus === null) enableTranslator = projConf.translator.enable;
@@ -135,7 +134,7 @@ export async function scorePoints({ word="no", text, user, pool, translationStat
 			if ((translated === text) && (transData.alternatives[0])) {
 				translated = transData.alternatives[0]
 			}
-			if (translated) count = count + countWord(word, translated); // I purposely added them together
+			if (translated) count = count + await countWord(word, translated); // I purposely added them together
 		}
 	}
 
@@ -167,7 +166,7 @@ export async function scorePoints({ word="no", text, user, pool, translationStat
 
 export default (async(client, msg) => {
 	if (msg.author.bot) return;
-	if (msg.channelId === client.recountingChannelId) return;
+	if (client.recountingIsOn && !client.recountedChannelIds.includes(msg.channelId)) return;
 
 	const word = "no";
 

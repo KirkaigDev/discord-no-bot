@@ -26,7 +26,8 @@ import { pool } from "#src/db";
 
 export interface CustomClient extends Client {
 	db: typeof pool;
-	recountingChannelId: string;
+	recountingIsOn: boolean;
+	recountedChannelIds: string[];
 };
 
 const client = new Client({
@@ -39,7 +40,8 @@ const client = new Client({
 	],
 }) as CustomClient;
 client.db = pool;
-client.recountingChannelId = "";
+client.recountingIsOn = false;
+client.recountedChannelIds = [];
 
 import { setEvents } from "#src/event-handler/events";
 await setEvents(client);

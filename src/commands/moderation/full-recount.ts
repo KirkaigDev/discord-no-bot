@@ -12,6 +12,7 @@ async function fetchChannelMessages(
 	channel: TextChannel,
 	interaction: CommandInteractionFix,
 	client: CustomClient,
+	unknownMemberUserIds: string[],
 ): Promise<FetchReturn> {
 	let occuredErrors = false;
 	let lastMessageId: string | null = null;
@@ -34,14 +35,25 @@ async function fetchChannelMessages(
 
 			for (const msg of channelMessages.values()) {
 				try {
-					if (msg.author.bot) {
+					if (msg.author.bot || unknownMemberUserIds.includes(msg.author.id)) {
 						lastMessageId = msg.id;
 						continue;
 					}
 
+					let member = msg.guild.members.cache.get(msg.author.id);
+					if (!member) {
+						try {
+							member = await msg.guild.members.fetch(msg.author.id);
+						} catch {
+							unknownMemberUserIds.push(msg.author.id);
+							lastMessageId = msg.id;
+							continue;
+						};
+					};
+
 					await scorePoints({
 						text: msg.content,
-						user: msg.guild.members.cache.get(msg.author.id) || await msg.guild.members.fetch(msg.author.id),
+						user: member,
 						pool: client.db,
 						translationStatus: interaction.options.getBoolean("translation-toggle")
 					});
@@ -118,12 +130,17 @@ export default {
 			await replyPromise;
 			const editReplyPromise = interaction.editReply("Starting...");
 
+			client.recountingIsOn = true;
+			client.recountedChannelIds = [];
+
 			const tableDeletePromise = client.db.query(
 				"DELETE FROM `user_points` WHERE guild_id = ?",
 				[interaction.guildId]
 			);
 
 			const interactionChannel = await interactionChannelFetchPromise as TextChannel;
+
+			const unknownMemberUserIds: string[] = [];
 
 			await tableDeletePromise;
 			await interactionChannel.send("Cleared database table entries of this guild");
@@ -135,23 +152,23 @@ export default {
 
 				if (!channel) continue;
 
-				client.recountingChannelId = channel.id;
-
 				const scanMsgsPromise = interactionChannel.send(`Scanning #${channel.name}...`);
-				const fetchMessagesPromise = fetchChannelMessages(channel, interaction, client);
+				const fetchMessagesPromise = fetchChannelMessages(channel, interaction, client, unknownMemberUserIds);
 
 				await scanMsgsPromise;
+				client.recountedChannelIds.push(channel.id);
 				try {
 					if ((await fetchMessagesPromise).occuredErrors) fetchSuccess = false;
-					client.recountingChannelId = "";
 					await interactionChannel.send(`Fetched all messages from ${channel.name}!`);
 				} catch(e) {
-					client.recountingChannelId = "";
 					await interactionChannel.send(`Failed to fetch messages of #${channel.name}, error: ${e}`)
 				};
 			};
+			client.recountingIsOn = false;
+			client.recountedChannelIds = [];
 
 			await updateLeaderboardRoles({ guild: guild, pool: client.db });
+
 			if (fetchSuccess) {
 				await interactionChannel.send("Command finished successfully")
 			} else {
