@@ -1,4 +1,4 @@
-import { DiscordAPIError, FetchMessagesOptions, RateLimitError, SlashCommandBuilder, TextChannel } from "discord.js"
+import { FetchMessagesOptions, SlashCommandBuilder, TextChannel } from "discord.js"
 import { scorePoints, updateLeaderboardRoles } from "#src/events/messageCreate/no-counter";
 import type { CommandInteractionFix, CommandInterface } from "#src/event-handler/types.d";
 import type { CustomClient } from "#src/index";
@@ -54,28 +54,18 @@ async function fetchChannelMessages(
 					await scorePoints({
 						text: msg.content,
 						user: member,
-						pool: client.db,
+						client: client,
 						translationStatus: interaction.options.getBoolean("translation-toggle")
 					});
 
 					lastMessageId = msg.id;
+					sleep(50);
 				} catch(err) {
-					if (err instanceof RateLimitError) {
-						console.log("Command 'recount-all-messages' was rate limited");
-						rateLimited = true;
-
-						await sleep(err.retryAfter);
-						break;
-					} else if ((err instanceof DiscordAPIError) && (err.code === 10007)) {
-						// Don't log unknown member errors
-						continue;
-					} else{
-						console.error((err instanceof Error) ? err.stack : err);
-						occuredErrors = true;
-						if (++continuousErrorCount === quitOnErrorAmount) {
-							console.error(`Hit continuous error limit during recount for all messages`);
-							return { occuredErrors: true, hitErrorLimit: true };
-						};
+					console.error((err instanceof Error) ? err.stack : err);
+					occuredErrors = true;
+					if (++continuousErrorCount === quitOnErrorAmount) {
+						console.error(`Hit continuous error limit during recount for all messages`);
+						return { occuredErrors: true, hitErrorLimit: true };
 					};
 				}
 			};
@@ -87,16 +77,9 @@ async function fetchChannelMessages(
 
 			continuousErrorCount = 0;
 		} catch(err) {
-			if (err instanceof RateLimitError) {
-				console.log("Command 'recount-all-messages' was rate limited");
-				rateLimited = true;
-
-				await sleep(err.retryAfter);
-			} else {
-				occuredErrors = true;
-				console.error((err instanceof Error) ? err.stack : err);
-				if (++continuousErrorCount === quitOnErrorAmount) return { occuredErrors: true, hitErrorLimit: true };
-			};
+			occuredErrors = true;
+			console.error((err instanceof Error) ? err.stack : err);
+			if (++continuousErrorCount === quitOnErrorAmount) return { occuredErrors: true, hitErrorLimit: true };
 		};
 	};
 };
@@ -152,10 +135,10 @@ export default {
 
 				if (!channel) continue;
 
-				const scanMsgsPromise = interactionChannel.send(`Scanning #${channel.name}...`);
+				const sendMessagePromise = interactionChannel.send(`Scanning #${channel.name}...`);
 				const fetchMessagesPromise = fetchChannelMessages(channel, interaction, client, unknownMemberUserIds);
 
-				await scanMsgsPromise;
+				await sendMessagePromise;
 				client.recountedChannelIds.push(channel.id);
 				try {
 					if ((await fetchMessagesPromise).occuredErrors) fetchSuccess = false;

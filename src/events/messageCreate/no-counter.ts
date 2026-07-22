@@ -1,6 +1,6 @@
 import type { PointsTable, TableHandler } from "#src/db-schema.d";
 import type { EventHandler } from "#src/event-handler/types.d";
-import type { CustomClient } from "#src/index";
+import type { CustomClient, TranslationCache } from "#src/index";
 import { Guild, GuildMember } from "discord.js";
 import { configDotenv } from "dotenv";
 configDotenv();
@@ -73,7 +73,9 @@ export async function updateLeaderboardRoles({pool, guild}: LeaderboardRoles) {
 }
 
 // translates using libretranslate
-async function translate(text: string) {
+async function translate(text: string, cache: TranslationCache):Promise<string> {
+	const cachedItem = cache.get(text);
+	if (cachedItem) return cachedItem;
 	try {
 		const trans = await fetch(`http://${projConf.translator.host}:${projConf.translator.port}/translate`, {
 			method: "POST",
@@ -88,10 +90,21 @@ async function translate(text: string) {
 			headers: { "Content-Type": "application/json" }
 		});
 
-		return (await trans.json());
+		const transData = await trans.json();
+
+		if ((transData?.detectedLanguage?.language) && (transData.detectedLanguage.language !== "en")) {
+			let translated = transData.translatedText;
+
+			// for some reason it doesn't always translate on the first response but works on the second
+			if ((translated === text) && (transData.alternatives[0])) {
+				translated = transData.alternatives[0]
+			}
+			return translated;
+		};
 	} catch (e) {
 		console.error(`translate error: ${e}`);
 	}
+	return "";
 }
 
 async function countWord(word: string, text: string) {
@@ -110,7 +123,7 @@ interface ScorePoints {
 	word?: string;
 	text: string;
 	user: GuildMember;
-	pool: CustomClient["db"];
+	client: CustomClient;
 	translationStatus?: boolean | null;
 };
 interface ScorePointsReturn {
@@ -118,24 +131,15 @@ interface ScorePointsReturn {
 	score: number;
 };
 
-export async function scorePoints({ word="no", text, user, pool, translationStatus=null}: ScorePoints): Promise<ScorePointsReturn> {
+export async function scorePoints({ word="no", text, user, client, translationStatus=null}: ScorePoints): Promise<ScorePointsReturn> {
 	let count: number = await countWord(word, text);
 
 	let enableTranslator = translationStatus;
 	if (translationStatus === null) enableTranslator = projConf.translator.enable;
 
 	if (enableTranslator) {
-		const transData = await translate(text);
-
-		if ((transData?.detectedLanguage?.language) && (transData.detectedLanguage.language !== "en")) {
-			let translated = transData.translatedText;
-
-			// for some reason it doesn't always translate on the first response but works on the second
-			if ((translated === text) && (transData.alternatives[0])) {
-				translated = transData.alternatives[0]
-			}
-			if (translated) count = count + await countWord(word, translated); // I purposely added them together
-		}
+		const translated = await translate(text, client.translationCache);
+		count = count + await countWord(word, translated); // I purposely added them together
 	}
 
 	let score = count;
@@ -144,7 +148,7 @@ export async function scorePoints({ word="no", text, user, pool, translationStat
 		score = Math.percentRounding(score / 2);
 	} else {
 		if (user.roles.cache.has(projConf.discord.roleIds.peopleLiked)) {
-			score = score * 2;
+			score = score * 3;
 		}
 	}
 
@@ -152,7 +156,7 @@ export async function scorePoints({ word="no", text, user, pool, translationStat
 	const userId = user.user.id;
 	const username = user.user.username;
 
-	await pool.query(
+	await client.db.query(
 		`INSERT INTO user_points(guild_id, user_id, username, points)
 		VALUES (?, ?, ?, ?)
 		ON DUPLICATE KEY UPDATE
@@ -166,7 +170,20 @@ export async function scorePoints({ word="no", text, user, pool, translationStat
 
 export default (async(client, msg) => {
 	if (msg.author.bot) return;
-	if (client.recountingIsOn && !client.recountedChannelIds.includes(msg.channelId)) return;
+	if (client.recountingIsOn && !client.recountedChannelIds.includes(msg.channelId) &&
+	   msg.channelId !== projConf.discord.spamChannelId) {
+		let count: number = await countWord("no", msg.content);
+
+		if (projConf.translator.enable) {
+			const translation = await translate(msg.content, client.translationCache);
+			count += await countWord("no", translation);
+		}
+
+		if (count !== 0) {
+			msg.reply("All messages are being recounted, rest assured your points will be counted.")
+		};
+		return;
+	};
 
 	const word = "no";
 
@@ -176,7 +193,7 @@ export default (async(client, msg) => {
 	const values = await scorePoints({
 		text: msg.content,
 		user: msg.guild.members.cache.get(msg.author.id) || await msg.guild.members.fetch(msg.author.id),
-		pool: client.db
+		client: client
 	});
 
 	if (msg.channelId === projConf.discord.spamChannelId) return;
