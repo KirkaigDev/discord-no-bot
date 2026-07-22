@@ -14,6 +14,7 @@
 	"scripts": {
 		"build": "rm -r ./build/; tsc",
 		"start": "node ./build/index.js",
+		"dev-start": "rm -r ./build/; tsc && node ./build/index.js",
 		"create-db": "node ./utils/create-db.js",
 		"create-db-schema": "node ./utils/create-db-schema.js"
 	},
