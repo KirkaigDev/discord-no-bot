@@ -122,7 +122,7 @@ async function countWord(word: string, text: string) {
 interface ScorePoints {
 	word?: string;
 	text: string;
-	user: GuildMember;
+	guildMember: GuildMember;
 	client: CustomClient;
 	translationStatus?: boolean | null;
 };
@@ -131,7 +131,7 @@ interface ScorePointsReturn {
 	score: number;
 };
 
-export async function scorePoints({ word="no", text, user, client, translationStatus=null}: ScorePoints): Promise<ScorePointsReturn> {
+export async function scorePoints({ word="no", text, guildMember, client, translationStatus=null}: ScorePoints): Promise<ScorePointsReturn> {
 	let count: number = await countWord(word, text);
 
 	let enableTranslator = translationStatus;
@@ -144,17 +144,17 @@ export async function scorePoints({ word="no", text, user, client, translationSt
 
 	let score = count;
 
-	if (user.roles.cache.has(projConf.discord.roleIds.peopleDisliked)) {
+	if (guildMember.roles.cache.has(projConf.discord.roleIds.peopleDisliked)) {
 		score = Math.percentRounding(score / 2);
 	} else {
-		if (user.roles.cache.has(projConf.discord.roleIds.peopleLiked)) {
+		if (guildMember.roles.cache.has(projConf.discord.roleIds.peopleLiked)) {
 			score = score * 3;
 		}
 	}
 
-	const guildId = user.guild.id;
-	const userId = user.user.id;
-	const username = user.user.username;
+	const guildId = guildMember.guild.id;
+	const userId = guildMember.user.id;
+	const username = guildMember.user.username;
 
 	await client.db.query(
 		`INSERT INTO user_points(guild_id, user_id, username, points)
@@ -192,7 +192,7 @@ export default (async(client, msg) => {
 	if (!msg.content) return;
 	const values = await scorePoints({
 		text: msg.content,
-		user: msg.guild.members.cache.get(msg.author.id) || await msg.guild.members.fetch(msg.author.id),
+		guildMember: msg.guild.members.cache.get(msg.author.id) || await msg.guild.members.fetch(msg.author.id),
 		client: client
 	});
 

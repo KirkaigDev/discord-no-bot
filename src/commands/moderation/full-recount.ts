@@ -53,7 +53,7 @@ async function fetchChannelMessages(
 
 					await scorePoints({
 						text: msg.content,
-						user: member,
+						guildMember: member,
 						client: client,
 						translationStatus: interaction.options.getBoolean("translation-toggle")
 					});
