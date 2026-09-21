@@ -97,4 +97,7 @@ await setEvents(client);
 import { setCommands } from "#src/event-handler/commands";
 await setCommands(client);
 
+import { startSchedules } from "#src/schedules";
+startSchedules(client);
+
 client.login(process.env.TOKEN);
