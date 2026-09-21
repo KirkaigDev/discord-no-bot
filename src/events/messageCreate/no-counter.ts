@@ -171,7 +171,7 @@ export async function scorePoints({ word="no", text, guildMember, client, transl
 export default (async(client, msg) => {
 	if (msg.author.bot) return;
 	if (client.recountingIsOn && !client.recountedChannelIds.includes(msg.channelId) &&
-	   msg.channelId !== projConf.discord.spamChannelId) {
+	   msg.channelId !== projConf.discord.channelIds.spam) {
 		let count: number = await countWord("no", msg.content);
 
 		if (projConf.translator.enable) {
@@ -196,7 +196,7 @@ export default (async(client, msg) => {
 		client: client
 	});
 
-	if (msg.channelId === projConf.discord.spamChannelId) return;
+	if (msg.channelId === projConf.discord.channelIds.spam) return;
 
 	let content =`${word} x${values.count}`;
 	if (values.count !== values.score) content = `${word} x${values.count}(points added: ${values.score})`;

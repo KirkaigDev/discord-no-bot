@@ -3,7 +3,10 @@ interface ProjectConfig {
 		guildId: string;
 		clientId: string;
 		devs: string[];
-		spamChannelId: string;
+		channelIds: {
+			spam: string;
+			general: string;
+		};
 		roleIds: {
 			negator: string;
 			leaderboardFirst: string;
